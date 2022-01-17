@@ -25,14 +25,18 @@ class BaseAPI(object):
         self.id = kwargs.pop("id", "dontcare")
         self.finality = kwargs.pop("finality", "optimistic")
         self.client = requests.Session()
-        retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[502, 503, 504])
+        retries = Retry(
+            total=5, backoff_factor=0.5, status_forcelist=[502, 503, 504]
+        )
         self.client.mount("https://", HTTPAdapter(max_retries=retries))
 
     def generate_payload(self, method="query", **params) -> dict:
         _params = params.copy()
-        _params.update({
-            "finality": self.finality,
-        })
+        _params.update(
+            {
+                "finality": self.finality,
+            }
+        )
         return {
             "jsonrpc": self.jsonrpc,
             "id": self.id,
@@ -42,19 +46,12 @@ class BaseAPI(object):
 
 
 class NearAPI(BaseAPI):
-
     def view_account(self, account_id) -> dict:
-        params = {
-            "request_type": "view_account",
-            "account_id": account_id
-        }
+        params = {"request_type": "view_account", "account_id": account_id}
 
         _payload = self.generate_payload(**params)
 
-        _r = self.client.post(
-            self.near_rpc_url,
-            json=_payload
-        )
+        _r = self.client.post(self.near_rpc_url, json=_payload)
 
         return _r.json()["result"]
 
@@ -65,14 +62,11 @@ class NearAPI(BaseAPI):
             # "block_id": block_id
         }
         if block_id:
-            params.update({
-                "block_id": block_id
-            })
-        _payload = self.generate_payload(method="EXPERIMENTAL_changes", **params)
-        _r = self.client.post(
-            self.near_rpc_url,
-            json=_payload
+            params.update({"block_id": block_id})
+        _payload = self.generate_payload(
+            method="EXPERIMENTAL_changes", **params
         )
+        _r = self.client.post(self.near_rpc_url, json=_payload)
 
         if "error" in _r.json():
             return _r.json()["error"]
@@ -86,13 +80,10 @@ class NearAPI(BaseAPI):
             "request_type": "call_function",
             "account_id": account_id,
             "method_name": method_name,
-            "args_base64": args_base64.decode("utf-8")
+            "args_base64": args_base64.decode("utf-8"),
         }
         _payload = self.generate_payload(**params)
-        _r = self.client.post(
-            self.near_rpc_url,
-            json=_payload
-        )
+        _r = self.client.post(self.near_rpc_url, json=_payload)
 
         _data = _r.json()
 
@@ -102,9 +93,7 @@ class NearAPI(BaseAPI):
             "block_height": _data["result"]["block_height"],
             "block_hash": _data["result"]["block_hash"],
             "logs": _data["result"]["logs"],
-            "result": parse_near_result(
-                _data["result"]["result"]
-            )
+            "result": parse_near_result(_data["result"]["result"]),
         }
 
     def gas(self, block=None) -> dict:
@@ -113,17 +102,12 @@ class NearAPI(BaseAPI):
             "jsonrpc": self.jsonrpc,
             "id": self.id,
             "method": "gas_price",
-            "params": [None]
+            "params": [None],
         }
 
         if block:
-            _payload.update({
-                "params": [block]
-            })
-        _r = self.client.post(
-            near_rpc_url,
-            json=_payload
-        )
+            _payload.update({"params": [block]})
+        _r = self.client.post(near_rpc_url, json=_payload)
         return _r.json()
 
 
@@ -136,7 +120,11 @@ if __name__ == "__main__":
         account_id="debionetwork.octopus-registry.near",
         method_name="get_validator_rewards_of",
         # args={"start_era": "0", "end_era": "41", "delegator_id": "d1-octopus.near", "validator_id": "d1-octopus.near"}
-        args={"start_era": "0", "end_era": "41", "validator_id": "d1-octopus.near"}
+        args={
+            "start_era": "0",
+            "end_era": "41",
+            "validator_id": "d1-octopus.near",
+        },
     )
     # pprint(res, indent=2)
 
