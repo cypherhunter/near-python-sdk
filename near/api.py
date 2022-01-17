@@ -47,12 +47,12 @@ class BaseAPI(object):
 
 
 class NearAPI(BaseAPI):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        self.network = NearNetwork(
+    @property
+    def network(self) -> NearNetwork:
+        _network = NearNetwork(
             client=self.client, near_rpc_url=self.near_rpc_url
         )
+        return _network
 
     def view_account(self, account_id) -> dict:
         params = {"request_type": "view_account", "account_id": account_id}
