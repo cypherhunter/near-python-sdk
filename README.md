@@ -11,6 +11,7 @@
 - [ ] Config Protocol
 - [x] Browser Near Network Info
 - [ ] Browser Transactions
+- [ ] Handling error messages
 
 
 ## Setup Near RPC
