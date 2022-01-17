@@ -4,6 +4,7 @@ import json
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from near.network import NearNetwork
 
 near_rpc_url = os.getenv("NEAR_RPC_URL", "https://rpc.mainnet.near.org")
 
@@ -46,6 +47,13 @@ class BaseAPI(object):
 
 
 class NearAPI(BaseAPI):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.network = NearNetwork(
+            client=self.client, near_rpc_url=self.near_rpc_url
+        )
+
     def view_account(self, account_id) -> dict:
         params = {"request_type": "view_account", "account_id": account_id}
 
@@ -102,11 +110,11 @@ class NearAPI(BaseAPI):
             "jsonrpc": self.jsonrpc,
             "id": self.id,
             "method": "gas_price",
-            "params": [None],
+            "params": [block],
         }
 
-        if block:
-            _payload.update({"params": [block]})
+        # if block:
+        #     _payload.update({"params": [block]})
         _r = self.client.post(near_rpc_url, json=_payload)
         return _r.json()
 
@@ -116,16 +124,16 @@ if __name__ == "__main__":
 
     near_api = NearAPI()
 
-    res = near_api.call_contract_func(
-        account_id="debionetwork.octopus-registry.near",
-        method_name="get_validator_rewards_of",
-        # args={"start_era": "0", "end_era": "41", "delegator_id": "d1-octopus.near", "validator_id": "d1-octopus.near"}
-        args={
-            "start_era": "0",
-            "end_era": "41",
-            "validator_id": "d1-octopus.near",
-        },
-    )
+    # res = near_api.call_contract_func(
+    #     account_id="debionetwork.octopus-registry.near",
+    #     method_name="get_validator_rewards_of",
+    #     # args={"start_era": "0", "end_era": "41", "delegator_id": "d1-octopus.near", "validator_id": "d1-octopus.near"}
+    #     args={
+    #         "start_era": "0",
+    #         "end_era": "41",
+    #         "validator_id": "d1-octopus.near",
+    #     },
+    # )
     # pprint(res, indent=2)
 
     # res = near_api.call_contract_func(
@@ -134,4 +142,9 @@ if __name__ == "__main__":
     #     # args={"appchain_id": "debionetwork"},
     #     args={"appchain_id": "myriad"},
     # )
+
+    # res = near_api.network_status()
+
+    # res = near_api.view_account("nearfans.poolv1.near")
+    res = near_api.network.validators()
     pprint(res, indent=2)
