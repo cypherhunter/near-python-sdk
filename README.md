@@ -24,3 +24,29 @@ res = near_api.call_contract_func(
     args={},
 )
 ```
+
+---
+
+### Network
+
+```.python
+from near.api import NearAPI
+
+# fetch near validiators
+res = near_api.network.validators()
+
+res = near_api.call_contract_func(
+	account_id="nearfans.poolv1.near",
+    method_name="get_reward_fee_fraction",
+    args=[]
+)
+
+{
+	'block_hash': 'J13uE8vwQAGDeecNBVXMCZxUZXYv3crN8XY5gSfuTZsk',
+ 	'block_height': 57574416,
+  	'logs': [],
+  	'result': {'denominator': 100, 'numerator': 3}
+}
+
+```
+

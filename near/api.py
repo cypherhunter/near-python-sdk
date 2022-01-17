@@ -81,7 +81,9 @@ class NearAPI(BaseAPI):
 
         return _r.json()["result"]
 
-    def call_contract_func(self, account_id, method_name, args: dict) -> dict:
+    def call_contract_func(
+        self, account_id, method_name, args: [dict, list]
+    ) -> dict:
         args_base64 = base64.b64encode(json.dumps(args).encode("utf-8"))
 
         params = {
@@ -94,7 +96,6 @@ class NearAPI(BaseAPI):
         _r = self.client.post(self.near_rpc_url, json=_payload)
 
         _data = _r.json()
-
         if "error" in _data["result"]:
             return _data["result"]["error"]
         return {
@@ -145,6 +146,12 @@ if __name__ == "__main__":
 
     # res = near_api.network_status()
 
+    res = near_api.call_contract_func(
+        account_id="d1.poolv1.near",
+        method_name="get_reward_fee_fraction",
+        args=[],
+    )
+
     # res = near_api.view_account("nearfans.poolv1.near")
-    res = near_api.network.validators()
+    # res = near_api.network.validators()
     pprint(res, indent=2)
