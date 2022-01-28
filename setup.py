@@ -1,24 +1,22 @@
 """
 Near-python-sdk
 -------------
-Easily serve your static files from aliyun oss.
+Easily fetch blockchain data for near
 """
 from setuptools import setup
 
-
 __version__ = "0.0.2"
 
-
 setup(
-    name="Near-python-sdk",
+    name="near-python-sdk",
     version=__version__,
     url="https://github.com/ExchangeAnn/near-python-sdk",
     license="MIT",
     author="jiaxin",
     author_email="edison7500@gmail.com",
-    description="Seamlessly serve the static files of your Flask app from aliyun oss",
+    description="Fetch blockchain data for Near-Protocol",
     long_description=__doc__,
-    py_modules=["near"],
+    packages=["near"],
     zip_safe=False,
     include_package_data=True,
     platforms="near",
