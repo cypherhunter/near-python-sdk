@@ -4,7 +4,10 @@ import json
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+
+from near.exceptions import NearException
 from near.network import NearNetwork
+from near.models.account import Account
 
 near_rpc_url = os.getenv("NEAR_RPC_URL", "https://rpc.mainnet.near.org")
 
@@ -31,6 +34,9 @@ class BaseAPI(object):
         )
         self.client.mount("https://", HTTPAdapter(max_retries=retries))
 
+    def __str__(self):
+        return f"NEAR RPC URL: {self.near_rpc_url}"
+
     def generate_payload(self, method="query", **params) -> dict:
         _params = params.copy()
         _params.update(
@@ -54,14 +60,18 @@ class NearAPI(BaseAPI):
         )
         return _network
 
-    def view_account(self, account_id) -> dict:
+    def view_account(self, account_id) -> Account:
         params = {"request_type": "view_account", "account_id": account_id}
 
         _payload = self.generate_payload(**params)
 
         _r = self.client.post(self.near_rpc_url, json=_payload)
 
-        return _r.json()["result"]
+        if "error" in _r.json():
+            raise NearException()
+        else:
+            return Account(**_r.json()["result"])
+        # return _r.json()["result"]
 
     def view_account_change(self, account_ids: list, block_id=None) -> dict:
         params = {
@@ -125,18 +135,17 @@ if __name__ == "__main__":
 
     near_api = NearAPI()
 
-    res = near_api.call_contract_func(
-        account_id="myriad.octopus-registry.near",
-        method_name="get_validator_rewards_of",
-        # args={"start_era": "0", "end_era": "41", "delegator_id": "d1-octopus.near", "validator_id": "d1-octopus.near"}
-        args={
-            "start_era": "0",
-            "end_era": "21",
-            # "delegator_id": "d1.near",
-            "validator_id": "d1-octopus.near",
-        },
-    )
-    pprint(res, indent=2)
+    # res = near_api.call_contract_func(
+    #     account_id="myriad.octopus-registry.near",
+    #     method_name="get_validator_rewards_of",
+    #     # args={"start_era": "0", "end_era": "41", "delegator_id": "d1-octopus.near", "validator_id": "d1-octopus.near"}
+    #     args={
+    #         "start_era": "0",
+    #         "end_era": "21",
+    #         # "delegator_id": "d1.near",
+    #         "validator_id": "d1-octopus.near",
+    #     },
+    # )
 
     # res = near_api.call_contract_func(
     #     account_id="octopus-registry.near",
@@ -161,5 +170,23 @@ if __name__ == "__main__":
     # )
 
     # res = near_api.view_account("nearfans.poolv1.near")
-    # res = near_api.network.validators()
-    pprint(res, indent=2)
+    # metadata = near_api.call_contract_func(
+    #     account_id="aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near",
+    #     method_name="ft_metadata",
+    #     args={},
+    # )
+    # pprint(metadata, indent=2)
+    #
+    # res = near_api.call_contract_func(
+    #     account_id="aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near",
+    #     method_name="ft_total_supply",
+    #     args={},
+    # )
+    # total_supply = res["result"]
+    # print(int(total_supply) / 10 ** 18)
+    account = near_api.view_account("d1.near")
+    print(account.amount)
+
+    # pprint(account, indent=2)
+
+    # pprint(res, indent=2)
