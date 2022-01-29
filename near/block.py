@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from near.models.block import Block
 
 
 class NearBlock(object):
@@ -9,7 +9,7 @@ class NearBlock(object):
         self.near_rpc_url = near_rpc_url
         self.client = client
 
-    def finality(self) -> Dict:
+    def finality(self) -> Block:
         _payload = {
             "jsonrpc": self.jsonrpc,
             "id": self.id,
@@ -18,9 +18,13 @@ class NearBlock(object):
         }
         _r = self.client.post(self.near_rpc_url, json=_payload)
 
-        return _r.json()["result"]
+        if "error" in _r.json():
+            logging.error(_r.json()["error"])
+            raise
+        else:
+            return Block(**_r.json()["result"])
 
-    def block(self, block_id: [int, str]) -> Dict:
+    def block(self, block_id: [int, str]) -> Block:
         _payload = {
             "jsonrpc": self.jsonrpc,
             "id": self.id,
@@ -34,7 +38,26 @@ class NearBlock(object):
         if "error" in _r.json():
             logging.error(_r.json()["error"])
             raise
-        return _r.json()
+        else:
+            return Block(**_r.json()["result"])
+        # return _r.json()
+
+    def chunk(self, chunk_id: str):
+        _payload = {
+            "jsonrpc": self.jsonrpc,
+            "id": self.id,
+            "method": "chunk",
+            "params": {
+                "chunk_id": chunk_id,
+            },
+        }
+        _r = self.client.post(self.near_rpc_url, json=_payload)
+
+        if "error" in _r.json():
+            _error = _r.json()
+            logging.error(_error["error"]["cause"]["info"]["error_message"])
+        else:
+            return _r.json()
 
 
 if __name__ == "__main__":
@@ -43,6 +66,10 @@ if __name__ == "__main__":
 
     client = requests.Session()
     block = NearBlock(
-        client=client, near_rpc_url="https://rpc.testnet.near.org"
+        client=client, near_rpc_url="https://rpc.mainnet.near.org"
     )
-    pprint(block.finality(), indent=2)
+    # for chunk in block.finality().chunks:
+    #     print(chunk)
+    pprint(
+        block.chunk("8FwCWQvQwuVGaZSk2dx416Fb8A7R16oUGentzXowWkkm"), indent=2
+    )

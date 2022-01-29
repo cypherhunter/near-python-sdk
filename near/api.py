@@ -136,23 +136,23 @@ if __name__ == "__main__":
     near_api = NearAPI()
 
     # res = near_api.call_contract_func(
-    #     account_id="myriad.octopus-registry.near",
+    #     account_id="debionetwork.octopus-registry.near",
     #     method_name="get_validator_rewards_of",
     #     # args={"start_era": "0", "end_era": "41", "delegator_id": "d1-octopus.near", "validator_id": "d1-octopus.near"}
     #     args={
     #         "start_era": "0",
-    #         "end_era": "21",
+    #         "end_era": "54",
     #         # "delegator_id": "d1.near",
     #         "validator_id": "d1-octopus.near",
     #     },
     # )
 
-    # res = near_api.call_contract_func(
-    #     account_id="octopus-registry.near",
-    #     method_name="get_appchain_status_of",
-    #     # args={"appchain_id": "debionetwork"},
-    #     args={"appchain_id": "myriad"},
-    # )
+    res = near_api.call_contract_func(
+        account_id="octopus-registry.near",
+        method_name="get_appchain_status_of",
+        args={"appchain_id": "debionetwork"},
+        # args={"appchain_id": "myriad"},
+    )
 
     # res = near_api.network_status()
 
@@ -184,9 +184,8 @@ if __name__ == "__main__":
     # )
     # total_supply = res["result"]
     # print(int(total_supply) / 10 ** 18)
-    account = near_api.view_account("d1.near")
-    print(account.amount)
+    # account = near_api.view_account("jiaxin.near")
+    # print(account)
 
     # pprint(account, indent=2)
-
-    # pprint(res, indent=2)
+    pprint(res, indent=2)
