@@ -13,8 +13,8 @@ class Account(object):
 
     @property
     def amount(self) -> int:
-        return self._amount / 10 ** 24
+        return self._amount / 10**24
 
     @property
     def locked(self) -> int:
-        return self._locked / 10 ** 24
+        return self._locked / 10**24

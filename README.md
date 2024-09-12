@@ -29,9 +29,9 @@ from near.api import NearAPI
 near_api = NearAPI()
 
 res = near_api.call_contract_func(
-	account_id="dev-1588039999690",
-    method_name="get_num",
-    args={},
+  account_id="dev-1588039999690",
+  method_name="get_num",
+  args={},
 )
 ```
 
@@ -46,9 +46,9 @@ from near.api import NearAPI
 res = near_api.network.validators()
 
 res = near_api.call_contract_func(
-	account_id="nearfans.poolv1.near",
-    method_name="get_reward_fee_fraction",
-    args=[]
+  account_id="nearfans.poolv1.near",
+  method_name="get_reward_fee_fraction",
+  args=[]
 )
 
 {
