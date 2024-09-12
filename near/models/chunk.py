@@ -23,7 +23,7 @@ class ChunkHeader(object):
     @property
     def balance_burnt(self) -> Decimal:
         _balance_burnt = Decimal(self._balance_burnt)
-        return _balance_burnt / Decimal(10 ** self.decimal)
+        return _balance_burnt / Decimal(10**self.decimal)
 
 
 class Receipt(object):

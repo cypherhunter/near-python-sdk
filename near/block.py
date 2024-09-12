@@ -61,15 +61,4 @@ class NearBlock(object):
 
 
 if __name__ == "__main__":
-    import requests
-    from pprint import pprint
-
-    client = requests.Session()
-    block = NearBlock(
-        client=client, near_rpc_url="https://rpc.mainnet.near.org"
-    )
-    # for chunk in block.finality().chunks:
-    #     print(chunk)
-    pprint(
-        block.chunk("8FwCWQvQwuVGaZSk2dx416Fb8A7R16oUGentzXowWkkm"), indent=2
-    )
+    pass

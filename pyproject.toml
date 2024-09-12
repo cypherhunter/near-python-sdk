@@ -10,14 +10,8 @@ exclude = '''
   | \.tox
   | \.venv
   | _build
-  | migrations
-  | frontend
   | requirements
-  | static
-  | staticsource
-  | templates
   | build
   | dist
-  | upload
 )/
 '''
