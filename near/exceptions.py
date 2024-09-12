@@ -1,0 +1,3 @@
+class NearException(Exception):
+
+    pass
