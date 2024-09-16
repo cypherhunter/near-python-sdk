@@ -26,7 +26,7 @@ class NearBlock(object):
         else:
             return Block(**_r.json()["result"])
 
-    def block(self, block_id: List[int, str, None]) -> Block:
+    def block(self, block_id: [int, str, None]) -> Block:
         _payload = {
             "jsonrpc": self.jsonrpc,
             "id": self.id,

@@ -3,7 +3,7 @@ import base64
 import json
 from typing import Dict, List
 
-# import requests
+import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -79,7 +79,8 @@ class NearAPI(BaseAPI):
         if "error" in _r.json():
             raise NearException()
         else:
-            return Account(**_r.json()["result"])
+            _account = Account(**_r.json()["result"])
+            return f"{_account}"
 
     def view_account_change(self, account_ids: list, block_id=None) -> Dict:
         params = {
@@ -135,12 +136,11 @@ class NearAPI(BaseAPI):
 
         _r = self.client.post(near_rpc_url, json=_payload)
         gas = GasPrice(**_r.json())
-        return gas
+        return f"{gas}"
 
 
 if __name__ == "__main__":
     from pprint import pprint
-    import requests
 
     near_api = NearAPI()
 
@@ -204,7 +204,7 @@ if __name__ == "__main__":
     # print(int(total_supply) / 10 ** 18)
     # account = near_api.view_account("jiaxin.near")
     # print(account)
-    pprint(near_api.gas(), indent=2)
+    # pprint(near_api.gas(), indent=2)
 
     # pprint(account, indent=2)
     # pprint(res["result"], indent=2)
