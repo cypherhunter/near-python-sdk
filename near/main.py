@@ -3,7 +3,7 @@ from near.api import NearAPI
 
 
 class main:
-    fire.Fire(NearAPI)
+    fire.Fire(NearAPI(), name="near-api")
     # near_api = NearAPI()
 
 
