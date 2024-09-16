@@ -5,7 +5,7 @@ class NearNetwork(object):
         self.near_rpc_url = near_rpc_url
         self.client = client
 
-    def __str__(self):
+    def __repr__(self):
         r = self.status()
         _info = f"NEAR Protocol\nVersion: {r['version']['version']}\n"
         _info += f"Build: {r['version']['build']}\n"

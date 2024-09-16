@@ -11,6 +11,7 @@ from near.block import NearBlock
 from near.exceptions import NearException
 from near.network import NearNetwork
 from near.models.account import Account
+from near.models.gas import GasPrice
 
 near_rpc_url = os.getenv("NEAR_RPC_URL", "https://rpc.mainnet.near.org")
 
@@ -132,10 +133,9 @@ class NearAPI(BaseAPI):
             "params": [block],
         }
 
-        # if block:
-        #     _payload.update({"params": [block]})
         _r = self.client.post(near_rpc_url, json=_payload)
-        return _r.json()
+        gas = GasPrice(**_r.json())
+        return gas
 
 
 if __name__ == "__main__":
@@ -186,8 +186,8 @@ if __name__ == "__main__":
     #     args={"pool_id": 79},
     # )
 
-    res = near_api.view_account("nearfans.poolv1.near")
-    print(res)
+    # res = near_api.view_account("nearfans.poolv1.near")
+    # print(res)
     # metadata = near_api.call_contract_func(
     #     account_id="aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near",
     #     method_name="ft_metadata",
@@ -204,6 +204,7 @@ if __name__ == "__main__":
     # print(int(total_supply) / 10 ** 18)
     # account = near_api.view_account("jiaxin.near")
     # print(account)
+    pprint(near_api.gas(), indent=2)
 
     # pprint(account, indent=2)
     # pprint(res["result"], indent=2)

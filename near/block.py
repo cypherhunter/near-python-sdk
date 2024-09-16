@@ -1,4 +1,6 @@
 import logging
+from pprint import pprint
+from typing import List
 from near.models.block import Block
 
 
@@ -24,15 +26,26 @@ class NearBlock(object):
         else:
             return Block(**_r.json()["result"])
 
-    def block(self, block_id: [int, str]) -> Block:
+    def block(self, block_id: List[int, str, None]) -> Block:
         _payload = {
             "jsonrpc": self.jsonrpc,
             "id": self.id,
             "method": "block",
-            "params": {
-                "block_id": block_id,
-            },
+            # "params": {
+            #     "block_id": block_id,
+            # },
         }
+        if block_id is None:
+            _payload.update({"params": {"finality": "final"}})
+        else:
+            _payload.update(
+                {
+                    "params": {
+                        "block_id": block_id,
+                    }
+                }
+            )
+
         _r = self.client.post(self.near_rpc_url, json=_payload)
 
         if "error" in _r.json():
