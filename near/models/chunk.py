@@ -8,6 +8,7 @@ class ChunkHeader(object):
     def __init__(self, **kwargs):
         self._balance_burnt = kwargs.pop("balance_burnt", 0)
         self.chunk_hash = kwargs.pop("chunk_hash", "")
+        self._gas_limit = kwargs.pop("gas_limit", 0)
         self.prev_block_hash = kwargs.pop("prev_block_hash", "")
         self.prev_state_root = kwargs.pop("prev_state_root", "")
         self.rent_paid = kwargs.pop("rent_paid", 0)
@@ -15,9 +16,11 @@ class ChunkHeader(object):
         self.signature = kwargs.pop("signature", "")
         self.tx_root = kwargs.pop("tx_root", "")
 
-    def __str__(self):
+    def __repr__(self):
         return (
-            f"Balance Burnt: {self.balance_burnt}\nShard id: {self.shard_id}"
+            f"Balance Burnt: {self.balance_burnt}\n"
+            f"Gas Limit: {self.gas_limit}\n"
+            f"Shard id: {self.shard_id}\n"
         )
 
     @property
@@ -25,13 +28,18 @@ class ChunkHeader(object):
         _balance_burnt = Decimal(self._balance_burnt)
         return _balance_burnt / Decimal(10**self.decimal)
 
+    @property
+    def gas_limit(self) -> Decimal:
+        gas_limit = Decimal(self._gas_limit)
+        return gas_limit / Decimal(10**self.decimal)
+
 
 class Receipt(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def __str__(self):
+    def __repr__(self):
         return f"{self.receipt_id}"
 
 

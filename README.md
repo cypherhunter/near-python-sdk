@@ -12,17 +12,18 @@
 - [x] Browser Near Network Info
 - [ ] Browser Transactions
 - [ ] Handling error messages
-
+- [x] Support CLI
 
 ## Setup Near RPC
 
-```.shell
+```.bash
 export NEAR_RPC_URL=https://rpc.testnet.near.org
 ```
+
 [https://docs.near.org/docs/api/rpc](https://docs.near.org/docs/api/rpc)
 
-
 ## Usage
+
 ```.python
 from near.api import NearAPI
 
@@ -60,3 +61,11 @@ res = near_api.call_contract_func(
 
 ```
 
+### CLI
+
+```.bash
+python  near/main.py view_account root.near
+Amount: 8566.744926870419
+Locked: 0.0
+Storage Usage: 26564
+```

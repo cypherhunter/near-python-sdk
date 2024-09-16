@@ -8,7 +8,7 @@ class Account(object):
         self.block_height = kwargs.pop("block_height", 0)
         self.block_hash = kwargs.pop("block_hash", "")
 
-    def __str__(self):
+    def __repr__(self):
         return f"Amount: {self.amount}\nLocked: {self.locked}\nStorage Usage: {self.storage_usage}"
 
     @property

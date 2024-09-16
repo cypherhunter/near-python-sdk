@@ -13,7 +13,7 @@ setup(
     url="https://github.com/ExchangeAnn/near-python-sdk",
     license="MIT",
     author="jiaxin",
-    author_email="edison7500@gmail.com",
+    author_email="muck-endorse-anvil@duck.com",
     description="Fetch blockchain data for Near-Protocol",
     long_description=__doc__,
     packages=["near"],
