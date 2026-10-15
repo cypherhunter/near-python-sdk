@@ -69,3 +69,34 @@ Amount: 8566.744926870419
 Locked: 0.0
 Storage Usage: 26564
 ```
+
+### Error handling
+
+All RPC methods raise `NearException` for JSON-RPC errors, HTTP or connection
+failures, and invalid RPC response envelopes. For JSON-RPC errors, `.error`
+contains the original error payload (including code, message, and details).
+Transport and JSON decoding failures retain the underlying exception as
+`__cause__`.
+
+```python
+from near.api import NearAPI
+from near.exceptions import NearException
+
+try:
+    result = NearAPI().view_account("example.near")
+except NearException as exc:
+    print(exc.error)
+```
+
+`view_account_change()` now raises on RPC errors instead of returning an error
+dictionary, and `chunk()` raises instead of logging and returning `None`.
+Successful return values keep their existing format.
+
+### Tests
+
+```bash
+uv sync --dev
+uv run python -m pytest
+```
+
+Tests use mocked RPC responses and do not require network access.

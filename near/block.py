@@ -1,7 +1,5 @@
-import logging
-from pprint import pprint
-from typing import List
 from near.models.block import Block
+from near.rpc import request_rpc
 
 
 class NearBlock(object):
@@ -18,13 +16,8 @@ class NearBlock(object):
             "method": "block",
             "params": {"finality": "final"},
         }
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        if "error" in _r.json():
-            logging.error(_r.json()["error"])
-            raise
-        else:
-            return Block(**_r.json()["result"])
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        return Block(**_data["result"])
 
     def block(self, block_id: [int, str, None]) -> Block:
         _payload = {
@@ -46,14 +39,8 @@ class NearBlock(object):
                 }
             )
 
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        if "error" in _r.json():
-            logging.error(_r.json()["error"])
-            raise
-        else:
-            return Block(**_r.json()["result"])
-        # return _r.json()
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        return Block(**_data["result"])
 
     def chunk(self, chunk_id: str):
         _payload = {
@@ -64,13 +51,7 @@ class NearBlock(object):
                 "chunk_id": chunk_id,
             },
         }
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        if "error" in _r.json():
-            _error = _r.json()
-            logging.error(_error["error"]["cause"]["info"]["error_message"])
-        else:
-            return _r.json()
+        return request_rpc(self.client, self.near_rpc_url, _payload)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "near-python-sdk"
+version = "0.0.3"
+description = "Fetch blockchain data for Near-Protocol"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "jiaxin", email = "muck-endorse-anvil@duck.com"}]
+classifiers = [
+    "Environment :: Python Environment",
+    "Intended Audience :: Developers",
+    "License :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.25",
+    "fire>=0.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["near*"]
+
 [tool.black]
 line-length = 79
 include = '\.pyi?$'
 exclude = '''
 /(
-		\.eggs
+    \.eggs
   | \.git
   | \.hg
   | \.mypy_cache
@@ -15,3 +54,13 @@ exclude = '''
   | dist
 )/
 '''
+
+[dependency-groups]
+dev = [
+    "black>=26.10.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+]
+
+
+

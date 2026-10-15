@@ -1,14 +1,14 @@
 import os
 import base64
 import json
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 from near.block import NearBlock
-from near.exceptions import NearException
+from near.rpc import request_rpc
 from near.network import NearNetwork
 from near.models.account import Account
 from near.models.gas import GasPrice
@@ -16,8 +16,8 @@ from near.models.gas import GasPrice
 near_rpc_url = os.getenv("NEAR_RPC_URL", "https://rpc.mainnet.near.org")
 
 
-def parse_near_result(r: List) -> Dict:
-    data = "".join([chr(i) for i in r])
+def parse_near_result(r: List[int]) -> Any:
+    data = bytes(r).decode("utf-8")
     return json.loads(data)
 
 
@@ -74,13 +74,9 @@ class NearAPI(BaseAPI):
 
         _payload = self.generate_payload(**params)
 
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        if "error" in _r.json():
-            raise NearException()
-        else:
-            _account = Account(**_r.json()["result"])
-            return f"{_account}"
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        _account = Account(**_data["result"])
+        return f"{_account}"
 
     def view_account_change(self, account_ids: list, block_id=None) -> Dict:
         params = {
@@ -93,12 +89,8 @@ class NearAPI(BaseAPI):
         _payload = self.generate_payload(
             method="EXPERIMENTAL_changes", **params
         )
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        if "error" in _r.json():
-            return _r.json()["error"]
-
-        return _r.json()["result"]
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        return _data["result"]
 
     def call_contract_func(
         self, account_id, method_name, args: [Dict, List]
@@ -112,12 +104,7 @@ class NearAPI(BaseAPI):
             "args_base64": args_base64.decode("utf-8"),
         }
         _payload = self.generate_payload(**params)
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        _data = _r.json()
-        if "error" in _data:
-            raise NearException(_data["error"])
-            # return _data["result"]["error"]
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
         return {
             "block_height": _data["result"]["block_height"],
             "block_hash": _data["result"]["block_hash"],
@@ -134,8 +121,8 @@ class NearAPI(BaseAPI):
             "params": [block],
         }
 
-        _r = self.client.post(near_rpc_url, json=_payload)
-        gas = GasPrice(**_r.json())
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        gas = GasPrice(**_data)
         return f"{gas}"
 
 

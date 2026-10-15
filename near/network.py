@@ -1,3 +1,6 @@
+from near.rpc import request_rpc
+
+
 class NearNetwork(object):
     def __init__(self, client, near_rpc_url, **kwargs):
         self.id = kwargs.pop("id", "dontcare")
@@ -23,9 +26,8 @@ class NearNetwork(object):
             "method": "status",
             "params": [],
         }
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        return _r.json()["result"]
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        return _data["result"]
 
     def info(self) -> dict:
         _payload = {
@@ -35,9 +37,8 @@ class NearNetwork(object):
             "params": [],
         }
 
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        return _r.json()["result"]
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        return _data["result"]
 
     def validators(self, block=None) -> dict:
         _payload = {
@@ -46,9 +47,8 @@ class NearNetwork(object):
             "method": "validators",
             "params": [block],
         }
-        _r = self.client.post(self.near_rpc_url, json=_payload)
-
-        return _r.json()["result"]
+        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        return _data["result"]
 
 
 if __name__ == "__main__":
