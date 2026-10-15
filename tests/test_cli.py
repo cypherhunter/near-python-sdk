@@ -291,3 +291,40 @@ def test_account_changes_json_and_block_selection(rpc, capsys):
         "account_ids": ["a.near"],
         "block_id": 123,
     }
+
+
+@pytest.mark.parametrize(
+    "environment, options, expected",
+    [
+        (None, [], "https://dotenv.example"),
+        ("https://env.example", [], "https://env.example"),
+        (
+            None,
+            ["--rpc-url", "https://explicit.example"],
+            "https://explicit.example",
+        ),
+    ],
+)
+def test_cli_dotenv_endpoint(
+    rpc, monkeypatch, tmp_path, capsys, environment, options, expected
+):
+    (tmp_path / ".env").write_text("NEAR_RPC_URL=https://dotenv.example\n")
+    if environment is not None:
+        monkeypatch.setenv("NEAR_RPC_URL", environment)
+    cli.main(["status", "--json", *options])
+    assert str(rpc.requests[-1].url) == expected
+    assert json.loads(capsys.readouterr().out) == rpc.result
+
+
+@pytest.mark.parametrize(
+    "tokens", [["--help"], ["status", "--help"], ["--version"]]
+)
+def test_help_does_not_load_dotenv(monkeypatch, tmp_path, capsys, tokens):
+    import near.api
+
+    (tmp_path / ".env").write_text("NEAR_RPC_URL=https://dotenv.example\n")
+    loader = Mock(side_effect=AssertionError("Help must not load .env"))
+    monkeypatch.setattr(near.api, "load_dotenv", loader)
+    cli.main(tokens)
+    assert capsys.readouterr().out
+    loader.assert_not_called()

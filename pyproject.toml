@@ -24,6 +24,7 @@ requires-python = ">=3.10"
 dependencies = [
     "httpx[socks]>=0.28,<1",
     "cyclopts>=4,<5",
+    "python-dotenv>=1,<2",
 ]
 
 [project.scripts]

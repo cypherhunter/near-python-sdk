@@ -18,7 +18,8 @@ uv run python -m near.main --help
 
 - Library: `from near.api import NearAPI`.
 - CLI: `near-rpc` and `python -m near.main`; explicit Cyclopts commands.
-- Dependencies: `httpx[socks]>=0.28,<1` and `cyclopts>=4,<5`.
+- Dependencies: `httpx[socks]>=0.28,<1`, `cyclopts>=4,<5`, and
+  `python-dotenv>=1,<2`.
 - Package metadata and dependency declarations: `pyproject.toml`.
 - Dependencies and development tools are managed with uv; commit `uv.lock` updates.
 
@@ -43,8 +44,12 @@ uv run python -m near.main --help
   across `NearAPI`, `NearBlock`, and `NearNetwork`.
 - Configure RPC through `NearAPI(rpc_url=..., timeout=..., max_retries=...,
   retry_statuses=..., backoff_factor=..., client=...)`.
-- Endpoint precedence: explicit `rpc_url`, `NEAR_RPC_URL` read at initialization,
-  then `https://rpc.mainnet.near.org`. Testnet is `https://rpc.testnet.near.org`.
+- Load `.env` from the current working directory at API initialization, before
+  client creation, using python-dotenv without overriding existing environment
+  variables. Never load it at module import or for CLI help/version.
+- Endpoint precedence: explicit `rpc_url`, existing `NEAR_RPC_URL` environment
+  variable, `.env` value, then `https://rpc.mainnet.near.org`.
+  Testnet is `https://rpc.testnet.near.org`.
 - Defaults: connect timeout 5s; read/write/pool timeouts 15s; 3 additional retry
   attempts; HTTP retry statuses 502/503/504; backoff waits 0.5, 1, then 2s.
 - `timeout` accepts HTTPX timeout objects, seconds, or `None` to disable timeouts.

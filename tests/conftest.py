@@ -5,7 +5,10 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def no_external_http(monkeypatch):
+def no_external_http(monkeypatch, tmp_path):
+    # Never load a developer's real .env file during unit tests.
+    monkeypatch.chdir(tmp_path)
+
     def fail(*args, **kwargs):
         pytest.fail("Unit tests must use httpx.MockTransport")
 

@@ -91,8 +91,22 @@ finality. The request sends only one of `block_id` and `finality`.
 
 ## RPC configuration
 
-Endpoint priority is an explicit `rpc_url`, then `NEAR_RPC_URL`, then Mainnet.
-The environment variable is read when each API instance is created.
+Each API instance loads `.env` from the current working directory before
+creating its HTTP client. This works for both the SDK and CLI; a missing `.env`
+is fine. Existing environment variables are never overwritten.
+
+```bash
+cp .env.example .env
+# Edit .env, for example: NEAR_RPC_URL=https://rpc.testnet.near.org
+uv run near-rpc status --json
+```
+
+Endpoint priority is an explicit `rpc_url` / `--rpc-url`, then the existing
+`NEAR_RPC_URL` environment variable, then `NEAR_RPC_URL` in `.env`, then Mainnet.
+Values are loaded at API initialization, not at import or when showing help.
+`.env` can also set HTTPX proxy variables such as `HTTPS_PROXY`. Loading uses
+`python-dotenv` and adds missing values to the process environment; once loaded,
+they are treated as existing environment variables. `.env` is ignored by Git.
 
 | Setting | Default |
 | --- | --- |

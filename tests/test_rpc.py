@@ -517,3 +517,58 @@ def test_account_changes_block_selection(api, rpc, block_id):
     params = json.loads(rpc.requests[0].content)["params"]
     assert params["block_id"] == block_id
     assert "finality" not in params
+
+
+@pytest.mark.parametrize(
+    "environment, explicit, expected",
+    [
+        (None, None, "https://dotenv.example"),
+        ("https://env.example", None, "https://env.example"),
+        (None, "https://explicit.example", "https://explicit.example"),
+        (
+            "https://env.example",
+            "https://explicit.example",
+            "https://explicit.example",
+        ),
+    ],
+)
+def test_dotenv_endpoint_precedence(
+    monkeypatch, tmp_path, rpc, environment, explicit, expected
+):
+    monkeypatch.delenv("NEAR_RPC_URL", raising=False)
+    if environment is not None:
+        monkeypatch.setenv("NEAR_RPC_URL", environment)
+    (tmp_path / ".env").write_text(
+        '# Local configuration\nNEAR_RPC_URL="https://dotenv.example"\n',
+        encoding="utf-8",
+    )
+    api = NearAPI(client=rpc.client, rpc_url=explicit)
+    api.network.status()
+    assert str(rpc.requests[-1].url) == expected
+
+
+def test_dotenv_loaded_at_initialization(monkeypatch, tmp_path, rpc):
+    monkeypatch.delenv("NEAR_RPC_URL", raising=False)
+    with NearAPI(client=rpc.client) as api:
+        assert api.near_rpc_url == "https://rpc.mainnet.near.org"
+    (tmp_path / ".env").write_text("NEAR_RPC_URL=https://dotenv.example\n")
+    with NearAPI(client=rpc.client) as api:
+        assert api.near_rpc_url == "https://dotenv.example"
+    assert not rpc.client.is_closed
+
+
+def test_dotenv_proxy_loaded_before_client(monkeypatch, tmp_path):
+    import os
+
+    monkeypatch.delenv("HTTPS_PROXY", raising=False)
+    (tmp_path / ".env").write_text("HTTPS_PROXY=socks5://127.0.0.1:7890\n")
+    client = Mock()
+
+    def factory(**kwargs):
+        assert os.environ["HTTPS_PROXY"] == "socks5://127.0.0.1:7890"
+        return client
+
+    monkeypatch.setattr(httpx, "Client", factory)
+    with NearAPI():
+        pass
+    client.close.assert_called_once()

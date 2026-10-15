@@ -1,9 +1,11 @@
 import os
 import base64
 import json
+from pathlib import Path
 from typing import Any, Dict, List
 
 import httpx
+from dotenv import load_dotenv
 
 from near.block import NearBlock
 from near.rpc import (
@@ -44,6 +46,7 @@ class BaseAPI(object):
         ``timeout`` accepts an HTTPX Timeout, seconds, or None (disabled).
         If omitted, injected clients retain their own timeout configuration.
         """
+        load_dotenv(dotenv_path=Path.cwd() / ".env", override=False)
         self.id = kwargs.pop("id", "dontcare")
         self.finality = kwargs.pop("finality", "optimistic")
         self.near_rpc_url = (
