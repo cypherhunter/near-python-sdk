@@ -22,9 +22,12 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "requests>=2.25",
-    "fire>=0.7",
+    "httpx[socks]>=0.28,<1",
+    "cyclopts>=4,<5",
 ]
+
+[project.scripts]
+near-rpc = "near.main:main"
 
 [project.optional-dependencies]
 dev = [

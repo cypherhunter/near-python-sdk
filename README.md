@@ -1,102 +1,234 @@
 # near-python-sdk
 
-[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
-[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+Synchronous Python SDK and CLI for read-only NEAR JSON-RPC queries. Fetch account,
+block, chunk, validator, gas price, network, and contract view data. Requires
+Python 3.10 or newer.
 
-## TODO
+- HTTPX provides a shared HTTP connection pool, configurable timeouts, and SOCKS
+  proxy support through the included `httpx[socks]` dependency.
+- Cyclopts provides explicit CLI commands, parameter help, and argument validation.
 
-- [x] Browser Accounts / Contracts
-- [ ] Block / Chunk
-- [x] Browser Gas
-- [ ] Config Protocol
-- [x] Browser Near Network Info
-- [ ] Browser Transactions
-- [ ] Handling error messages
-- [x] Support CLI
+## Install and quick start
 
-## Setup Near RPC
+From this checkout, install the SDK and its `near-rpc` command:
 
-```.bash
+```bash
+pip install -e .
+near-rpc --help
+near-rpc status
+```
+
+For development with uv:
+
+```bash
+uv sync --dev
+uv run near-rpc --help
+uv run near-rpc status --json
+```
+
+Mainnet is the default. Select Testnet through an environment variable or a
+command option:
+
+```bash
 export NEAR_RPC_URL=https://rpc.testnet.near.org
+near-rpc status
+near-rpc status --rpc-url https://rpc.mainnet.near.org --json
 ```
 
-[https://docs.near.org/docs/api/rpc](https://docs.near.org/docs/api/rpc)
+## SDK usage
 
-## Usage
-
-```.python
+```python
 from near.api import NearAPI
 
-near_api = NearAPI()
-
-res = near_api.call_contract_func(
-  account_id="dev-1588039999690",
-  method_name="get_num",
-  args={},
-)
+with NearAPI() as api:
+    status = api.network.status()
+    validators = api.network.validators()
+    gas = api.gas()
+    print(status["chain_id"])
+    print(gas)
 ```
 
----
+The API, block client, and network client reuse one HTTPX client. Context manager
+exit closes an SDK-owned client, including when a query raises an exception.
+`api = NearAPI()` also works; call `api.close()` when finished.
 
-### Network
+Existing successful return formats are preserved:
 
-```.python
+| SDK method | Returns |
+| --- | --- |
+| `api.view_account(account_id)` | Formatted account balance and storage string |
+| `api.view_account_change(account_ids, block_id=None)` | Account changes dictionary |
+| `api.call_contract_func(account_id, method_name, args)` | Block information, logs, and decoded JSON result dictionary |
+| `api.gas(block=None)` | Formatted gas price string in NEAR |
+| `api.network.status()` | Node status dictionary |
+| `api.network.info()` | Network information dictionary |
+| `api.network.validators(block=None)` | Validator information dictionary |
+| `api.block.finality(finality="final")` | `Block` model |
+| `api.block.block(block_id)` | `Block` model; `None` selects the latest final block |
+| `api.block.chunk(chunk_id)` | Complete JSON-RPC response envelope |
+
+Account balances and gas prices are expressed in NEAR, not yoctoNEAR. Query
+finality defaults to `"optimistic"`; configure `NearAPI(finality="final")` to use
+final data for account, account change, and contract queries. Block queries
+without a height/hash default to `"final"`.
+
+Contract calls are read-only. Arguments must be JSON-serializable dictionaries or
+lists; the SDK encodes them as base64 and decodes the returned JSON value.
+Replace the contract and method below with values from the selected network:
+
+```python
+with NearAPI(finality="final") as api:
+    result = api.call_contract_func(
+        account_id="contract.near",
+        method_name="get_value",
+        args={},
+    )
+    print(result["result"])
+```
+
+`view_account_change([...], block_id=123)` selects a height or hash instead of
+finality. The request sends only one of `block_id` and `finality`.
+
+## RPC configuration
+
+Endpoint priority is an explicit `rpc_url`, then `NEAR_RPC_URL`, then Mainnet.
+The environment variable is read when each API instance is created.
+
+| Setting | Default |
+| --- | --- |
+| RPC endpoint | `https://rpc.mainnet.near.org` |
+| Connect timeout | 5 seconds |
+| Read, write, and pool timeouts | 15 seconds |
+| Additional retry attempts | 3 |
+| Retry HTTP statuses | 502, 503, 504 |
+| Backoff factor | 0.5 seconds; waits of 0.5, 1, then 2 seconds |
+
+```python
+import httpx
 from near.api import NearAPI
 
-# fetch near validiators
-res = near_api.network.validators()
-
-res = near_api.call_contract_func(
-  account_id="nearfans.poolv1.near",
-  method_name="get_reward_fee_fraction",
-  args=[]
-)
-
-{
-	'block_hash': 'J13uE8vwQAGDeecNBVXMCZxUZXYv3crN8XY5gSfuTZsk',
- 	'block_height': 57574416,
-  	'logs': [],
-  	'result': {'denominator': 100, 'numerator': 3}
-}
-
+with NearAPI(
+    rpc_url="https://rpc.testnet.near.org",
+    timeout=httpx.Timeout(15.0, connect=5.0),
+    max_retries=3,
+    retry_statuses=(502, 503, 504),
+    backoff_factor=0.5,
+) as api:
+    status = api.network.status()
 ```
 
-### CLI
+`timeout` accepts an HTTPX timeout, a number of seconds for all timeout phases,
+or `None` to disable timeouts. These settings apply to the API and its block and
+network clients.
 
-```.bash
-python  near/main.py view_account root.near
-Amount: 8566.744926870419
-Locked: 0.0
-Storage Usage: 26564
+Automatic retries apply only to explicitly allowlisted read-only operations,
+on connection errors, connect timeouts, or configured HTTP status errors.
+`max_retries=3` permits at most four total attempts; use `max_retries=0` to disable
+retries. Read/write/pool timeouts, malformed responses, and JSON-RPC application
+errors are not retried. Unknown methods and transaction submission methods are
+never automatically retried.
+
+Inject an `httpx.Client` to customize transports, authentication, proxies, or
+pooling:
+
+```python
+with httpx.Client(timeout=30.0) as client:
+    with NearAPI(client=client) as api:
+        status = api.network.status()
+    # The caller still owns client here.
 ```
 
-### Error handling
+An injected client keeps its timeout unless `NearAPI(timeout=...)` explicitly
+overrides it for SDK requests. The SDK never closes an injected client.
+HTTPX environment proxy settings also apply to SDK-owned clients; SOCKS support
+is included in the project dependencies.
 
-All RPC methods raise `NearException` for JSON-RPC errors, HTTP or connection
-failures, and invalid RPC response envelopes. For JSON-RPC errors, `.error`
-contains the original error payload (including code, message, and details).
-Transport and JSON decoding failures retain the underlying exception as
-`__cause__`.
+## Error handling
+
+HTTP/connection failures, invalid JSON, and invalid JSON-RPC envelopes raise
+`NearException`. Envelope validation checks JSON-RPC 2.0, the response ID, and
+result/error fields. JSON-RPC application errors retain their original payload
+in `.error`; HTTP and JSON decoding failures retain the underlying exception
+in `__cause__`.
 
 ```python
 from near.api import NearAPI
 from near.exceptions import NearException
 
 try:
-    result = NearAPI().view_account("example.near")
+    with NearAPI() as api:
+        account = api.view_account("example.near")
 except NearException as exc:
     print(exc.error)
 ```
 
-`view_account_change()` now raises on RPC errors instead of returning an error
-dictionary, and `chunk()` raises instead of logging and returning `None`.
-Successful return values keep their existing format.
+## CLI
 
-### Tests
+| Command | Purpose | `--json` |
+| --- | --- | --- |
+| `status` | Node version, chain, and sync status | Yes |
+| `gas [--block HEIGHT_OR_HASH]` | Gas price in NEAR | No |
+| `validators [--block HEIGHT_OR_HASH]` | Validators and staking information | Yes |
+| `account ACCOUNT_ID` | Account balance and storage usage | No |
+| `block [HEIGHT_OR_HASH] [--finality final\|optimistic]` | Block data | Yes |
+| `info` | Network peers and connections | Yes |
+| `chunk CHUNK_HASH` | Chunk response envelope | Yes |
+| `account-changes ACCOUNT_ID... [--block-id HEIGHT_OR_HASH]` | Account changes | Yes |
+| `contract-call ACCOUNT_ID METHOD [ARGS_JSON]` | Read-only contract call; arguments default to `{}` | Yes |
+
+Every query command accepts `--rpc-url`. Put it after the command; it overrides
+`NEAR_RPC_URL`. Block finality applies when no height/hash is supplied.
+
+```bash
+near-rpc --help
+near-rpc -h
+near-rpc --version
+near-rpc account --help
+near-rpc account example.near
+near-rpc block --finality final --json
+near-rpc block 123 --json
+near-rpc status --rpc-url https://rpc.testnet.near.org --json
+near-rpc account-changes example.near --block-id 123 --json
+near-rpc contract-call contract.near get_value '{}' --json
+```
+
+Account IDs, contract methods, heights, and hashes must exist on the selected
+network. Module execution is also supported:
+
+```bash
+python -m near.main --help
+python -m near.main status --json
+```
+
+Default output is human-readable. `--json` emits valid JSON for the supported
+commands; account and gas retain their formatted string output. Help and version
+create no HTTP client and send no RPC requests. Successful commands exit with
+status 0; argument or RPC failures exit nonzero and write errors to stderr.
+
+The CLI replaces automatic Fire method exposure with explicit command names:
+`view_account` becomes `account`, `network validators` becomes `validators`,
+`view_account_change` becomes `account-changes`, and `call_contract_func` becomes
+`contract-call`. SDK method names and successful return formats remain unchanged.
+
+## Development and packaging
 
 ```bash
 uv sync --dev
+uv run black --check .
+uv run black .
 uv run python -m pytest
+uv run near-rpc --help
+uv build
 ```
 
-Tests use mocked RPC responses and do not require network access.
+Tests use `httpx.MockTransport`; `tests/conftest.py` blocks external HTTP transport
+calls and isolates proxy environment variables. The suite covers SDK return
+compatibility, envelope validation, retries, timeouts, client ownership, CLI
+parsing, endpoint precedence, JSON output, help, and exit codes. Tests need no
+NEAR node or external network access.
+
+Package metadata and the console entry point live in `pyproject.toml`.
+`setup.py` delegates to that configuration. `uv build` writes a wheel and source
+distribution to `dist/`; `MANIFEST.in` includes the test fixtures in the source
+package. Commit `uv.lock` when changing dependencies. See `AGENTS.md` for repository
+contribution guidance.

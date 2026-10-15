@@ -1,4 +1,4 @@
-from near.rpc import request_rpc
+from near.rpc import RPCConfig, request_rpc
 
 
 class NearNetwork(object):
@@ -7,6 +7,7 @@ class NearNetwork(object):
         self.jsonrpc = kwargs.pop("jsonrpc", "2.0")
         self.near_rpc_url = near_rpc_url
         self.client = client
+        self._rpc_config = kwargs.pop("rpc_config", None) or RPCConfig()
 
     def __repr__(self):
         r = self.status()
@@ -26,7 +27,9 @@ class NearNetwork(object):
             "method": "status",
             "params": [],
         }
-        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        _data = request_rpc(
+            self.client, self.near_rpc_url, _payload, config=self._rpc_config
+        )
         return _data["result"]
 
     def info(self) -> dict:
@@ -37,7 +40,9 @@ class NearNetwork(object):
             "params": [],
         }
 
-        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        _data = request_rpc(
+            self.client, self.near_rpc_url, _payload, config=self._rpc_config
+        )
         return _data["result"]
 
     def validators(self, block=None) -> dict:
@@ -47,25 +52,7 @@ class NearNetwork(object):
             "method": "validators",
             "params": [block],
         }
-        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        _data = request_rpc(
+            self.client, self.near_rpc_url, _payload, config=self._rpc_config
+        )
         return _data["result"]
-
-
-if __name__ == "__main__":
-    import requests
-    from pprint import pprint
-
-    client = requests.Session()
-    near_network = NearNetwork(
-        client=client, near_rpc_url="https://rpc.testnet.near.org"
-    )
-
-    pprint(near_network.status(), indent=2)
-    print(
-        "================================================================================="
-    )
-    pprint(near_network.info(), indent=2)
-    print(
-        "================================================================================="
-    )
-    pprint(near_network.validators(), indent=2)

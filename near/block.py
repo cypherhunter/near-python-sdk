@@ -1,5 +1,5 @@
 from near.models.block import Block
-from near.rpc import request_rpc
+from near.rpc import RPCConfig, request_rpc
 
 
 class NearBlock(object):
@@ -8,15 +8,18 @@ class NearBlock(object):
         self.jsonrpc = kwargs.pop("jsonrpc", "2.0")
         self.near_rpc_url = near_rpc_url
         self.client = client
+        self._rpc_config = kwargs.pop("rpc_config", None) or RPCConfig()
 
-    def finality(self) -> Block:
+    def finality(self, finality="final") -> Block:
         _payload = {
             "jsonrpc": self.jsonrpc,
             "id": self.id,
             "method": "block",
-            "params": {"finality": "final"},
+            "params": {"finality": finality},
         }
-        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        _data = request_rpc(
+            self.client, self.near_rpc_url, _payload, config=self._rpc_config
+        )
         return Block(**_data["result"])
 
     def block(self, block_id: [int, str, None]) -> Block:
@@ -39,7 +42,9 @@ class NearBlock(object):
                 }
             )
 
-        _data = request_rpc(self.client, self.near_rpc_url, _payload)
+        _data = request_rpc(
+            self.client, self.near_rpc_url, _payload, config=self._rpc_config
+        )
         return Block(**_data["result"])
 
     def chunk(self, chunk_id: str):
@@ -51,7 +56,9 @@ class NearBlock(object):
                 "chunk_id": chunk_id,
             },
         }
-        return request_rpc(self.client, self.near_rpc_url, _payload)
+        return request_rpc(
+            self.client, self.near_rpc_url, _payload, config=self._rpc_config
+        )
 
 
 if __name__ == "__main__":
